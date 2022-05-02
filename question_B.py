@@ -2,6 +2,7 @@ from cmath import pi
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import csv
 
 
 
@@ -56,6 +57,14 @@ def gaussian(x,m,s):
     gauss_func=np.exp(-0.5*((x-m)/s)**2)/(s*np.sqrt(2*pi))
     return gauss_func
     
+    
+
+def write_to_csv(file_name, samples):
+    with open(file_name, 'w') as file:
+        write = csv.writer(file)
+        write.writerow(['X1', 'X2'])
+        write.writerows(samples)
+    
 
 
 if __name__ == '__main__':
@@ -76,6 +85,17 @@ if __name__ == '__main__':
     # Final pair data f1
     final_list_F1 = createListPairs(final_samples_1_F1, final_samples_2_F1)
     
+    # For Neural Network Training
+    train_samples_1_F0 = generateNumbersF0(number_samples=200, desired_mean=desired_mean, desired_std_dev=desired_std_dev)
+    train_samples_2_F0 = generateNumbersF0(number_samples=200, desired_mean=desired_mean, desired_std_dev=desired_std_dev)
+    
+    train_samples_F0 = createListPairs(train_samples_1_F0, train_samples_2_F0)
+    
+    train_samples_1_F1 = generateNumbersF1(numbers_samples=200, desired_std_dev=desired_std_dev)
+    train_samples_2_F1 = generateNumbersF1(numbers_samples=200, desired_std_dev=desired_std_dev)
+    
+    train_samples_F1 = createListPairs(train_samples_1_F1, train_samples_2_F1)
+    
 
     errorX0 = 0
     errorX1 = 0
@@ -87,8 +107,21 @@ if __name__ == '__main__':
             errorX1 += 1
         
     total_Error = (errorX0 + errorX1) * 100 / (2 * num_samples)
+    
     print("X0 error: {}, {} %".format(errorX0, errorX0 * 100 / num_samples))
     print("X1 error: {}, {} %".format(errorX1, errorX1 * 100 / num_samples))
     print("Total error: {} %".format(total_Error))
         
+        
+    # Storing the number pairs for later use
+    write_to_csv('train_samples_F0.csv', train_samples_F0)
+    write_to_csv('train_samples_F1.csv', train_samples_F1)
+    write_to_csv('test_samples_f0.csv', final_list_F0)
+    write_to_csv('test_samples_f1.csv', final_list_F1)
+
+    
+
+        
+    
+    
     
