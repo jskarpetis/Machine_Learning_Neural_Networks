@@ -1,0 +1,7 @@
+{
+    "cSpell.words": ["Mantics", "searchresults", "subtittle"],
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.vscode-pylance"
+    }
+}

@@ -1,13 +1,11 @@
-from random import sample
-from typing import final
+from cmath import pi
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
 
 
-def generateNumbersF0(number_samples, desired_mean, desired_std_dev):
-    # X1 sample 
+def generateNumbersF0(number_samples, desired_mean, desired_std_dev): 
     samples = np.random.normal(loc=0.0, scale=desired_std_dev, size=number_samples)
 
     actual_mean = np.mean(samples) 
@@ -42,8 +40,6 @@ def generateNumbersF1(numbers_samples, desired_std_dev):
     return final_samples
 
         
-        
-
 
 def createListPairs(array_one, array_two):
     final_list = []
@@ -56,7 +52,9 @@ def createListPairs(array_one, array_two):
         
     return final_list
     
-    
+def gaussian(x,m,s):
+    gauss_func=np.exp(-0.5*((x-m)/s)**2)/(s*np.sqrt(2*pi))
+    return gauss_func
     
 
 
@@ -64,6 +62,7 @@ if __name__ == '__main__':
     num_samples = 1000000
     desired_mean = 0.0
     desired_std_dev = 1
+    
 
     final_samples_1_F0 = generateNumbersF0(number_samples=num_samples, desired_mean=desired_mean, desired_std_dev=desired_std_dev)
     final_samples_2_F0 = generateNumbersF0(number_samples=num_samples, desired_mean=desired_mean, desired_std_dev=desired_std_dev)
@@ -76,7 +75,20 @@ if __name__ == '__main__':
     
     # Final pair data f1
     final_list_F1 = createListPairs(final_samples_1_F1, final_samples_2_F1)
+    
 
-    
-    
+    errorX0 = 0
+    errorX1 = 0
+    for i in range(num_samples):
+        if ((0.5 * (gaussian(final_list_F0[i][0], -1, 1) + gaussian(final_list_F0[i][0], 1, 1))) > gaussian(final_list_F0[i][0], 0, 1) and (0.5 * (gaussian(final_list_F0[i][1], -1, 1) + gaussian(final_list_F0[i][1], 1, 1))) > gaussian(final_list_F0[i][1], 0, 1)):
+            errorX0 += 1
+
+        if ((0.5 * (gaussian(final_list_F1[i][0], -1, 1) + gaussian(final_list_F1[i][0], 1, 1))) < gaussian(final_list_F1[i][0], 0, 1) and (0.5 * (gaussian(final_list_F1[i][1], -1, 1) + gaussian(final_list_F1[i][1], 1, 1))) > gaussian(final_list_F1[i][1], 0, 1)):
+            errorX1 += 1
+        
+    total_Error = (errorX0 + errorX1) * 100 / (2 * num_samples)
+    print("X0 error: {}, {} %".format(errorX0, errorX0 * 100 / num_samples))
+    print("X1 error: {}, {} %".format(errorX1, errorX1 * 100 / num_samples))
+    print("Total error: {} %".format(total_Error))
+        
     
