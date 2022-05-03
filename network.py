@@ -64,12 +64,16 @@ class Network :
         return self.__neurons[1], self.__neurons[-1]
 
 
-    def cross_entropy(self, vector_p, vector_q):
+    def cross_entropy(self, y, y_hat):
+        def safe_log(x): return 0 if x == 0 else numpy.log(x)
 
-        H = 0
-        for i in range(len(vector_p)):
-            H += -vector_p[i] * numpy.log(vector_q[i])
-        return H
+        total = 0
+        for curr_y, curr_y_hat in zip(y, y_hat):
+            total += (curr_y * safe_log(curr_y_hat) + (1 - curr_y) * safe_log(1 - curr_y_hat))
+        return - total / len(y)
+
+
+
 
 
     def SGD(self, training_data, epochs, mini_batch_size, eta, test_data=None):
@@ -103,19 +107,21 @@ class Network :
         # print('TEMP WEIGHTS\n', temp_weights, '\n')
         
         
-        for x, y in mini_batch.to_numpy():
+        for x1, x2 in mini_batch.to_numpy():
             
             # print(mini_batch)
             # Calling backpropagation
-            delta_temp_biases, delta_temp_weights = self.backprop(x, y, len(mini_batch))
+            delta_temp_biases, delta_temp_weights = self.backprop(x1, x2, len(mini_batch))
+            # print(delta_temp_weights)
             # print('DELTA TEMP BIAS\n', delta_temp_biases, '\n')
             # print(numpy.shape(delta_temp_biases))
 
             temp_biases = [temp_b + delta_temp_b for temp_b, delta_temp_b in zip(temp_biases, delta_temp_biases)]
             temp_weights = [temp_w + delta_temp_w for temp_w, delta_temp_w in zip(temp_weights, delta_temp_weights)]
+        
 
-        self.__weights = [w - (eta / len(mini_batch)) * nw for w, nw in zip(self.__weights, temp_weights)]
-        self.__biases = [b - (eta / len(mini_batch)) * nb for b, nb in zip(self.__biases, temp_biases)]
+        self.__weights = [w - (eta) * nw for w, nw in zip(self.__weights, temp_weights)]
+        self.__biases = [b - (eta) * nb for b, nb in zip(self.__biases, temp_biases)]
 
         # print('\n WELCOME', self.__weights)
         # print('\n', self.__biases)
@@ -135,6 +141,7 @@ class Network :
         p = [1, 0.00001]
         q = [1-outputs[0], outputs[0]]
 
+
         loss = self.cross_entropy(p, q)
         dW = loss * outputs[0] * (1 - outputs[0])
 
@@ -147,35 +154,22 @@ class Network :
             delta = numpy.dot(numpy.transpose(self.__biases[prev_layer]), loss)
             B_update[prev_layer] = delta
 
+        # print('\n',W_update, '\n')
         return (B_update, W_update) 
 
         
 
-        
-        
-       
-        # backward pass
-        # delta = self.cross_entropy(activations[-1], y) * self.sigmoid_prime(zs[-1])
-
-        # nabla_b[-1] = delta
-        # nabla_w[-1] = numpy.dot(delta, activations[-2].transpose())
-       
-        # for _layer in range(2, self.num_layers):
-        #     z = zs[-_layer]
-        #     sp = self.sigmoid_prime(z)
-        #     delta = numpy.dot(numpy.transpose(self.__weights[-_layer+1]), delta) * sp
-        #     nabla_b[-_layer] = delta
-        #     nabla_w[-_layer] = numpy.dot(numpy.transpose(delta, activations[-_layer-1]))
 
 
                           
 if __name__ == '__main__':
     network = Network([2,20,1])
-    train_data = pandas.read_csv('./train_samples_F1.csv')
+    train_data = pandas.read_csv('./train_samples_F0.csv')
     # print(len(train_data))
     # print('\n',network.cross_entropy([1, 0.00001], [0.86, 0.14]))
-    network.SGD(training_data=train_data, epochs=10, mini_batch_size=10, eta=0.025)
+    network.SGD(training_data=train_data, epochs=1, mini_batch_size=10, eta=0.01)
     
+    # hidden_layer, outputs = network.feedForward([0.18283921622077468,0.8977168520050608])
     
 
 
