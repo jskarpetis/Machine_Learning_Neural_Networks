@@ -54,7 +54,23 @@ class Network :
                     neuron_value += self.__weights[prev_layer][j][k] * self.__neurons[prev_layer][k]
                 self.__neurons[i][j] = self.__activate(neuron_value + self.__biases[prev_layer][j])
 
+    def Mutate(self,chance, val):
+        for i in range(len(self.__biases)):
+            for j in range(len(self.__biases[i])):
+                if(numpy.random.uniform(0.0, chance) <= 5):
+                    self.__biases[i][j] += numpy.random.uniform(-val, val)
 
+        for i in range(len(self.__weights)):
+            for j in range(len(self.__weights[i])):
+                for k in range(len(self.__weights[i][j])):
+                    if(numpy.random.uniform(0.0, chance) <= 5):
+                        self.__weights[i][j][k] += numpy.random.uniform(-val, val)
+        
+        print('Weigths and Biases after mutation')
+        print(self.__weights)
+        print(self.__biases)
+                    
+             
 if __name__ == '__main__':
     network = Network([2,20,1])
     network.feedForward([1.04234, -0.524])
