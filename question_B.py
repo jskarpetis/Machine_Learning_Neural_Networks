@@ -62,7 +62,7 @@ def gaussian(x,m,s):
 def write_to_csv(file_name, samples):
     with open(file_name, 'w') as file:
         write = csv.writer(file)
-        write.writerow(['X1', 'X2'])
+        write.writerow(['X', 'Y'])
         write.writerows(samples)
     
 
