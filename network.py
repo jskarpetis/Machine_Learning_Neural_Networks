@@ -22,18 +22,17 @@ class Network :
     
     def __initNeurons(self) :
         self.__neurons = [ [float(0) for i in range(int(self.__layers[i]))] for i in range(len(self.__layers)) ]
-        
-        print('\n')
+        # print('\n')
         # print(self.__neurons)
     
     def __initBiases(self):
         self.__biases = [ [float(0) for _ in range(self.__layers[i])] for i in range(1, len(self.__layers)) ]
-        print('\n')
+        # print('\n')
         # print(self.__biases)
     
     def __initWeights(self):
         self.__weights = [[[float(self.generateRandomNumber(self.__layers[i-1], self.__layers[i])) for _ in range(self.__layers[i-1])] for _ in range(self.__layers[i])] for i in range(1, len(self.__layers))]
-        print('\n')
+        # print('\n')
         # print(self.__weights)
 
     def sigmoid_prime(self, z):
@@ -130,29 +129,50 @@ class Network :
     def backprop(self, x, y, batch_size):
         W_update = [numpy.zeros(numpy.shape(b)) for b in self.__biases]
         B_update = [numpy.zeros(numpy.shape(w)) for w in self.__weights]
-
         inputs = [x, y]
+        # print(inputs)
+
 
         hidden_layer, outputs = self.feedForward(inputs)
-        # print('\n Hidden Layer', hidden_layer)
+        print('\n Hidden Layer', hidden_layer)
         # print(inputs,'-->', outputs)
 
-
+        # outputs[0] = z 
+        # 1 - outputs[0] = 1-z
         p = [1, 0.00001]
         q = [1-outputs[0], outputs[0]]
-
+        # q = [0.25, 0.75]
 
         loss = self.cross_entropy(p, q)
-        dW = loss * outputs[0] * (1 - outputs[0])
+        # Watch
+        # BIASES ALWAYS 0 --> FIX
+        # https://medium.com/dataseries/back-propagation-algorithm-and-bias-neural-networks-fcf68b5153
+        # https://www.askpython.com/python/examples/backpropagation-in-python#:~:text=%20Implementing%20Backpropagation%20in%20Python%20%201%20Import,Split%20Dataset%20in%20Training%20and%20Testing%20More%20
+        dW = loss * outputs[0] * (1 - outputs[0]) # THIS IS FOR THE OUTPUT LAYER ONLY 
 
-        print('Output -> {}\t\tLoss -> {}\t\tdW -> {}'.format(numpy.round(outputs[0], 4), numpy.round(loss, 4), numpy.round(dW, 4)))
+        # WE NEED DIFFERENT DW FOR INTERMEDIATE LAYERS
+        
 
-        W_update = numpy.dot(numpy.transpose(hidden_layer), dW) / batch_size
+        # print('Output -> {}\t\tLoss -> {}\t\tdW -> {}'.format(numpy.round(outputs[0], 4), numpy.round(loss, 4), numpy.round(dW, 4)))
+
 
         for i in range (1, len(self.__layers)):
             prev_layer = i-1
-            delta = numpy.dot(numpy.transpose(self.__biases[prev_layer]), loss)
-            B_update[prev_layer] = delta
+            B_delta = numpy.dot(numpy.transpose(self.__biases[prev_layer]), loss)
+            B_update[prev_layer] = B_delta
+        
+        # print('\nBIASES', B_update[0])
+        # print('\nBIASES', B_update[1])
+            
+            # print(W_update, '\n')
+
+        for i in range (1, len(self.__layers)):
+            # TODO code for output node is different than intermediate node
+            Wd_update = numpy.dot(numpy.transpose(self.__weights[i-1]), dW) / batch_size
+            W_update[i-1] = numpy.transpose(Wd_update)
+
+        # print('\nWEIGHTS', W_update[0])
+        # print('\nWEIGHTS', W_update[1])
 
         # print('\n',W_update, '\n')
         return (B_update, W_update) 
@@ -167,7 +187,7 @@ if __name__ == '__main__':
     train_data = pandas.read_csv('./train_samples_F1.csv')
     # print(len(train_data))
     # print('\n',network.cross_entropy([1, 0.00001], [0.86, 0.14]))
-    network.SGD(training_data=train_data, epochs=1, mini_batch_size=10, eta=0.01)
+    network.SGD(training_data=train_data, epochs=1, mini_batch_size=10, eta=0.1)
     
     # hidden_layer, outputs = network.feedForward([0.18283921622077468,0.8977168520050608])
     

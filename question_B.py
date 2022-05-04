@@ -26,7 +26,7 @@ def generateNumbersF1(numbers_samples, desired_std_dev):
     samples = np.random.normal(loc=0, size=numbers_samples, scale=desired_std_dev)
     
     for i in range(numbers_samples):
-        random_number = random.uniform(0.0,1.0)
+        random_number = random.randint(0,1)
         if (random_number < 0.5):
             binary_list.append(-1)
         else: 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     print("Total error: {} %".format(total_Error))
         
         
-    # # Storing the number pairs for later use
+    # Storing the number pairs for later use
     write_to_csv('train_samples_F0.csv', train_samples_F0)
     write_to_csv('train_samples_F1.csv', train_samples_F1)
     write_to_csv('test_samples_f0.csv', final_list_F0)
