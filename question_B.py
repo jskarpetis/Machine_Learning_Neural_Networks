@@ -26,7 +26,7 @@ def generateNumbersF1(numbers_samples, desired_std_dev):
     samples = np.random.normal(loc=0, size=numbers_samples, scale=desired_std_dev)
     
     for i in range(numbers_samples):
-        random_number = random.randint(0,1)
+        random_number = random.uniform(0.0,1.0)
         if (random_number < 0.5):
             binary_list.append(-1)
         else: 
@@ -107,27 +107,27 @@ if __name__ == '__main__':
     train_samples_F1 = createListPairs(train_samples_1_F1, train_samples_2_F1)
     
 
-    # errorX0 = 0
-    # errorX1 = 0
-    # for i in range(num_samples):
-    #     if ((0.5 * (gaussian(final_list_F0[i][0], -1, 1) + gaussian(final_list_F0[i][0], 1, 1))) > gaussian(final_list_F0[i][0], 0, 1) and (0.5 * (gaussian(final_list_F0[i][1], -1, 1) + gaussian(final_list_F0[i][1], 1, 1))) > gaussian(final_list_F0[i][1], 0, 1)):
-    #         errorX0 += 1
+    errorX0 = 0
+    errorX1 = 0
+    for i in range(num_samples):
+        if ((0.5 * (gaussian(final_list_F0[i][0], -1, 1) + gaussian(final_list_F0[i][0], 1, 1))) > gaussian(final_list_F0[i][0], 0, 1) and (0.5 * (gaussian(final_list_F0[i][1], -1, 1) + gaussian(final_list_F0[i][1], 1, 1))) > gaussian(final_list_F0[i][1], 0, 1)):
+            errorX0 += 1
 
-    #     if ((0.5 * (gaussian(final_list_F1[i][0], -1, 1) + gaussian(final_list_F1[i][0], 1, 1))) < gaussian(final_list_F1[i][0], 0, 1) and (0.5 * (gaussian(final_list_F1[i][1], -1, 1) + gaussian(final_list_F1[i][1], 1, 1))) > gaussian(final_list_F1[i][1], 0, 1)):
-    #         errorX1 += 1
+        if ((0.5 * (gaussian(final_list_F1[i][0], -1, 1) + gaussian(final_list_F1[i][0], 1, 1))) < gaussian(final_list_F1[i][0], 0, 1) and (0.5 * (gaussian(final_list_F1[i][1], -1, 1) + gaussian(final_list_F1[i][1], 1, 1))) > gaussian(final_list_F1[i][1], 0, 1)):
+            errorX1 += 1
         
-    # total_Error = (errorX0 + errorX1) * 100 / (2 * num_samples)
+    total_Error = (errorX0 + errorX1) * 100 / (2 * num_samples)
     
-    # print("X0 error: {}, {} %".format(errorX0, errorX0 * 100 / num_samples))
-    # print("X1 error: {}, {} %".format(errorX1, errorX1 * 100 / num_samples))
-    # print("Total error: {} %".format(total_Error))
+    print("X0 error: {}, {} %".format(errorX0, errorX0 * 100 / num_samples))
+    print("X1 error: {}, {} %".format(errorX1, errorX1 * 100 / num_samples))
+    print("Total error: {} %".format(total_Error))
         
         
     # # Storing the number pairs for later use
-    # write_to_csv('train_samples_F0.csv', train_samples_F0)
-    # write_to_csv('train_samples_F1.csv', train_samples_F1)
-    # write_to_csv('test_samples_f0.csv', final_list_F0)
-    # write_to_csv('test_samples_f1.csv', final_list_F1)
+    write_to_csv('train_samples_F0.csv', train_samples_F0)
+    write_to_csv('train_samples_F1.csv', train_samples_F1)
+    write_to_csv('test_samples_f0.csv', final_list_F0)
+    write_to_csv('test_samples_f1.csv', final_list_F1)
 
     
 

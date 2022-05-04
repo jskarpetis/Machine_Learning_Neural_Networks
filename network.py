@@ -164,7 +164,7 @@ class Network :
                           
 if __name__ == '__main__':
     network = Network([2,20,1])
-    train_data = pandas.read_csv('./train_samples_F0.csv')
+    train_data = pandas.read_csv('./train_samples_F1.csv')
     # print(len(train_data))
     # print('\n',network.cross_entropy([1, 0.00001], [0.86, 0.14]))
     network.SGD(training_data=train_data, epochs=1, mini_batch_size=10, eta=0.01)
