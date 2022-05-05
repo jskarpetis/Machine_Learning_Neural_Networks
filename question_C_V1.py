@@ -1,13 +1,10 @@
-from secrets import randbits
-from turtle import hideturtle, shape
 import numpy
 import math
 import sklearn
+from sklearn.decomposition import MiniBatchDictionaryLearning
 from sklearn.utils import shuffle
 import pandas
-import csv
-import random
-
+from keras.datasets import mnist
 
 # If response close to 0 then H0, if response close to 1 then H1
 class Network :
@@ -24,9 +21,6 @@ class Network :
         self.__initNeurons()
         self.__initBiases()
         self.__initWeights()
-        
-    def __str__(self):
-        return f"Layers of Network {self.__layers}\nShape of Network {self.__neurons}\nBiases {self.__biases}\nWeights {self.__weights}"
     
     def __initNeurons(self) :
         self.__neurons = [ [float(0) for i in range(int(self.__layers[i]))] for i in range(len(self.__layers)) ]
@@ -49,9 +43,13 @@ class Network :
     def __activate(self, value_to_reduce):
         return float(1 / (1 + math.exp(-value_to_reduce)))
     
-    def tanh(self, x):
-        return (numpy.exp(x) - numpy.exp(-x)) / (numpy.exp(x) + numpy.exp(-x))
-        
+    def relu(self, value):
+        if value > 0:
+            return value
+        else:
+            return 0
+                
+    
     def generateRandomNumber(self, n, m):
         number = numpy.random.normal(loc = 0, scale = (1 / (n + m)), size=1)
         number = number[0]
@@ -69,6 +67,7 @@ class Network :
                 for k in range (len(self.__neurons[prev_layer])):
                     neuron_value += self.__weights[prev_layer][j][k] * self.__neurons[prev_layer][k]
                 self.__neurons[i][j] = self.__activate(neuron_value + self.__biases[prev_layer][j])
+
         return self.__neurons[1], self.__neurons[-1]
 
 
@@ -101,43 +100,46 @@ class Network :
 
 
 
-    def SGD(self, training_data, epochs, mini_batch_size, learning_rate, test_data=None, label=None):
+    def SGD(self, training_data_X, training_data_Y, epochs, mini_batch_size, learning_rate, test_data=None, label=None):
         
-        samples = len(training_data)
+        samples = len(training_data_X)
         if test_data:
             # test_data = list(test_data)
             n_test = len(test_data)
         for j in range(epochs):
             # Stochastic
-            shuffle(training_data)
+            shuffle(training_data_X)
             
             # Splitting data into batches
-            mini_batches = [training_data[k : k + mini_batch_size] for k in range(0, samples, mini_batch_size)]
+            mini_batches_X = [training_data_X[k : k + mini_batch_size] for k in range(0, samples, mini_batch_size)]
+            mini_batches_Y = [training_data_Y[k : k + mini_batch_size] for k in range(0, samples, mini_batch_size)]
 
             # For each batch created
-            for mini_batch in mini_batches:
+            for mini_batch_X, mini_batch_Y in zip(mini_batches_X, mini_batches_Y):
                 # print(mini_batch)
-                self.__update_mini_batch(mini_batch, learning_rate)
+                self.__update_mini_batch(mini_batch_X, mini_batch_Y, learning_rate)
 
-            # if test_data:
-            #     print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
-            # else:
-            #     print(f"-------------------------------------------Epoch {j} complete-------------------------------------------")
+            if test_data:
+                print(f"Epoch {j}: {self.evaluate(test_data)} / {n_test}")
+            else:
+                print(f"-------------------------------------------Epoch {j} complete-------------------------------------------")
     
 
-    def __update_mini_batch(self, mini_batch, learning_rate):
-        
-        for x1, x2, label in mini_batch.to_numpy():
+    def __update_mini_batch(self, mini_batch_X, mini_batch_Y, learning_rate):
+        # print(mini_batch)
+        for image_vector, value in zip(mini_batch_X, mini_batch_Y):
+            # print(image_vector, value)
             # print(mini_batch)
             # Calling backpropagation
-            self.backprop(x1, x2, len(mini_batch), learning_rate, int(label))
+            self.backprop(image_vector=image_vector, value=value, batch_size=len(mini_batch_X), learning_rate=learning_rate)
 
     
 
-    def backprop(self, x, y, batch_size, learning_rate, label=None):
-        W_update = [numpy.zeros(numpy.shape(b)) for b in self.__biases]
+    def backprop(self, image_vector, value, batch_size, learning_rate, label=None):
+        W_update = [numpy.zeros(numpy.shape(b)) for b in self.__weights]
         B_update = []
-        inputs = [x, y]
+        
+        inputs = image_vector
         # print(inputs)
 
         # print(inputs)
@@ -148,7 +150,7 @@ class Network :
         # outputs[0] = z 
         # 1 - outputs[0] = 1-z
         
-        if (label == 0):
+        if (value == 0):
             p = [1, 0.00000001]
             q = [1 - outputs[0], outputs[0]]
             
@@ -160,34 +162,22 @@ class Network :
         # E1 = self.exponential_loss(p, q)
         E1 = self.cross_entropy(p, q)
         # E1 = abs(outputs[0] - 1)
-        # Watch
-        # BIASES ALWAYS 0 --> FIX
-        # https://medium.com/dataseries/back-propagation-algorithm-and-bias-neural-networks-fcf68b5153
-        # https://www.askpython.com/python/examples/backpropagation-in-python#:~:text=%20Implementing%20Backpropagation%20in%20Python%20%201%20Import,Split%20Dataset%20in%20Training%20and%20Testing%20More%20
         
         dW1 = E1 * outputs[0] * (1 - outputs[0]) # THIS IS FOR THE OUTPUT LAYER ONLY 
-        
-        
-        dB1 = label - outputs[0] 
+        dB1 = value / 8 - outputs[0] 
         # print('\nWeights[-1]\n', self.__weights[-1], '\n')
         E2 = numpy.dot(dW1, numpy.transpose(self.__weights[-1]))
         # print('\n E2 ->\n{}\nE2.Shape -> {} \n'.format(E2, numpy.shape(E2)))
-        
         
         hidden_layer = [hidden_layer]
         # print('\nHidden Layer ->\n{}\nHidden Layer Shape -> {}\n'.format(hidden_layer, numpy.shape(hidden_layer)))
         # print('\n1 - Hidden Layer ->\n{}\n1 - Hidden Layer Shape -> {}\n'.format(numpy.ones(shape=numpy.shape(hidden_layer)) - hidden_layer, numpy.shape(numpy.ones(shape=numpy.shape(hidden_layer)) - hidden_layer)))
         
         dW2 = E2 * numpy.transpose(hidden_layer * (numpy.ones(shape=numpy.shape(hidden_layer)) - hidden_layer))
-        
-
         dB2 = numpy.sum(dW2, axis=0, keepdims=False)
 
-        
         B_update.append(dB1)
         B_update.append(dB2)
-        
-        
         inputs = [inputs]
         # print('\n', inputs)
         W2_update = numpy.dot(numpy.transpose(hidden_layer), dW1) / batch_size
@@ -203,10 +193,9 @@ class Network :
         W_update[1] = [W2_update]
         
 
-        print('Output -> {}\t\tE1 -> {}\t\tdW1 -> {}'.format(numpy.round(outputs[0], 4), numpy.round(E1, 4),  numpy.round(dW1, 4)))
+        print('Output -> {}\t\tE1 -> {}'.format(numpy.round(outputs[0], 4), numpy.round(E1, 4)))
 
 
-        # print(dB1)
         
         for i in range (len(self.__layers) - 1):
             self.__biases[i] = self.__biases[i] - numpy.full(shape=numpy.shape(self.__biases[i]), fill_value=(learning_rate * B_update[i]))
@@ -226,40 +215,59 @@ class Network :
 
         
 
+def data_preprocessor(images, labels):
+    train_X = []
+    train_Y = []
+    for image, label in zip(images, labels):
+        if (label == 0 or label == 8):
+            train_X.append(image)
+            train_Y.append(label)
+    return train_X, train_Y
+      
 
-
+def data_reshaper(dataset):
+    # print('\nINITIAL DATASET SHAPE\n', numpy.shape(dataset))
+    final_dataset = []
+    for i in range(len(dataset)):
+        final_dataset.append(numpy.reshape(dataset[i], newshape=(784, )))
+        
+    # print('\FINAL DATASET SHAPE\n', numpy.shape(final_dataset))
+    return final_dataset
+    
                           
 if __name__ == '__main__':
-    network = Network([2,20,1])
+    network = Network([784,300,1])
     
-    # # print(len(train_data))
-    # # print('\n',network.cross_entropy([1, 0.00001], [0.86, 0.14]))
-    # train_data = pandas.read_csv('./test_samples_f0.csv')
-
-    # network.SGD(training_data=train_data, epochs=1, mini_batch_size=10, learning_rate=0.01)
+    (train_X, train_Y), (test_X, test_Y) = mnist.load_data()
     
-    # train_data = pandas.read_csv('./test_samples_f1.csv')
+    train_X, train_Y = data_preprocessor(train_X, train_Y)
+    test_X, test_Y = data_preprocessor(test_X, test_Y)
+    
+    train_X, train_Y = numpy.array(train_X) / 255.0, numpy.array(train_Y)
+    test_X, test_Y = numpy.array(test_X) / 255.0, numpy.array(test_Y)
+    
+    train_X_final = data_reshaper(train_X)
+    test_X_final = data_reshaper(test_X)
+    
+    # print(train_X_final[0])
+    
+    
+    
+    
+    network.SGD(training_data_X=train_X_final[:200], training_data_Y=train_Y[:200],  epochs=1, mini_batch_size=10, learning_rate=0.1)
+    
+    hidden_layer, outputs = network.feedForward(test_X_final[201])
+    print(outputs[0], test_Y[201])
+    
+    hidden_layer, outputs = network.feedForward(test_X_final[202])
+    print(outputs[0], test_Y[202])
+    
 
-    # network.SGD(training_data=train_data, epochs=1, mini_batch_size=10, learning_rate=0.01)
-    # print(network)
-    train_data = pandas.read_csv('./training_set.csv')
-    network.SGD(training_data=train_data, epochs=100, mini_batch_size=10, learning_rate=1)
-    # print(network)
-    test_data = pandas.read_csv('./test_set.csv')
-    total_error = 0
-    for line in test_data[:1000].to_numpy():
-        # print(line[0:2])
-        
-        hidden_layer, outputs = network.feedForward(line[0:2])
-        error = abs(line[-1] - outputs)
-        # print('\nOutput -> {}\tWanted_Output -> {}'.format(outputs[0], line[-1]))
-        total_error += error
-    total_error = total_error / 1000
-    print(total_error)
-    # hidden_layer, outputs_1 = network.feedForward([-0.7627969893105248,-0.3195817730432205])
-    # print(outputs_1[0])
-    # hidden_layer, outputs_0 = network.feedForward([-1.0323722989380082,1.0988736243950128])
-    # print(outputs_0[0])
+    # train_data = pandas.read_csv('./training_set.csv')
+    # network.SGD(training_data=train_data, epochs=100, mini_batch_size=200, learning_rate=0.01)
+
+    # hidden_layer, outputs = network.feedForward([-0.23166163020985503,-1.1604970924720286])
+    # print(outputs[0])
     
 
 

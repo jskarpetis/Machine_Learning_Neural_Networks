@@ -87,9 +87,6 @@ if __name__ == '__main__':
     final_samples_1_F0 = generateNumbersF0(number_samples=num_samples, desired_mean=desired_mean, desired_std_dev=desired_std_dev)
     final_samples_2_F0 = generateNumbersF0(number_samples=num_samples, desired_mean=desired_mean, desired_std_dev=desired_std_dev)
 
-    plt.hist(final_samples_1_F0, bins=400)
-    plt.show()
-
     plt.hist(final_samples_2_F0, bins=400)
     plt.show()
     
